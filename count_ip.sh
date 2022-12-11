@@ -1,26 +1,29 @@
 #!/bin/bash
 
-# check if a log file has been provided as an argument
-if [ -z "$1" ]; then
-  echo "Please provide a log file as an argument"
-  exit 1
-fi
+# Find all IP addresses in the log file using grep
+ip_addresses=$(grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" logfile.txt)
 
-# save the log file as a variable
-log_file=$1
+# Count the occurrences of each IP address
+ip_counts=()
+for ip in $ip_addresses; do
+    found=0
+    for entry in "${ip_counts[@]}"; do
+        # Check if the IP address is already in the counts
+        if [ "$ip" == "${entry[0]}" ]; then
+            # Increment the count for this IP address
+            ((entry[1]++))
+            found=1
+            break
+        fi
+    done
 
-# create an array to store the IP addresses
-ip_addresses=()
+    # Add a new entry to the counts if the IP address was not found
+    if [ $found -eq 0 ]; then
+        ip_counts+=("$ip" 1)
+    fi
+done
 
-# use a regular expression to extract the IP addresses from the log file and store them in the array
-while read -r line; do
-  if [[ $line =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]]; then
-    ip_addresses+=("$line")
-  fi
-done < "$log_file"
-
-# loop through the array and count the number of times each IP address appears
-for ip in "${ip_addresses[@]}"; do
-  count=$(grep -o "$ip" <<< "${ip_addresses[@]}" | wc -l)
-  echo "$ip appears $count times in the log file"
+# Print the IP addresses and their counts
+for entry in "${ip_counts[@]}"; do
+    printf "%s: %d\n" "${entry[0]}" "${entry[1]}"
 done
