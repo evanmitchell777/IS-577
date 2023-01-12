@@ -1,0 +1,5 @@
+#!/bin/bash
+
+logfile="/path/to/logfile"
+
+grep 'ubuntu' $logfile | awk '{print $11}' | sort | uniq -c | awk '{ if ($2 ~ /^[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*$/) { print $2 " " $1 } }'
